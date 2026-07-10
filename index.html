@@ -98,6 +98,14 @@
   table.pnl tr.exp-total td{color:var(--amber)}
   table.pnl .section-label{color:var(--dim);font-size:.78rem;font-weight:700;letter-spacing:.5px;padding-top:14px}
 
+  /* Sales-people highlighted stat */
+  .sales-stat{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:linear-gradient(135deg,rgba(34,211,238,.14),transparent);border:1px solid var(--line);
+    border-radius:12px;padding:12px 14px;margin-bottom:14px}
+  .sales-stat .l{font-size:.9rem;font-weight:600}
+  .sales-stat .sub{color:var(--dim);font-size:.75rem;margin-top:2px}
+  .sales-stat .v{font-size:1.9rem;font-weight:900;line-height:1;color:var(--brand-2)}
+
   /* KPI */
   .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .kpi{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px}
@@ -184,6 +192,7 @@
         <div class="card">
           <h2>דו״ח רווח והפסד (P&L)</h2>
           <p class="hint">פירוט חודשי מלא</p>
+          <div class="sales-stat" id="salesStat"></div>
           <table class="pnl" id="pnl"></table>
         </div>
 
@@ -438,6 +447,15 @@ function update(){
   const dl = document.getElementById('derivedLeads');
   if(dl) dl.textContent = num(Math.round(r.leadsForMedia)) + ' לידים';
 
+  // נתון בולט: מספר אנשי המכירות
+  const overCapacity = r.numClosers > 1;
+  document.getElementById('salesStat').innerHTML = `
+    <div>
+      <div class="l">👥 אנשי מכירות (קלוזרים)</div>
+      <div class="sub">קיבולת ${num(state.capacity)} עסקאות לאיש · ${num(Math.round(r.dealsCloser))} עסקאות דרך קלוזר${overCapacity?` · חריגה מהקיבולת → +${r.numClosers-1} אנשי מכירות`:''}</div>
+    </div>
+    <div class="v">${r.numClosers}</div>`;
+
   // P&L
   document.getElementById('pnl').innerHTML = `
     <tr><td class="section-label" colspan="2">הכנסות</td></tr>
@@ -446,7 +464,7 @@ function update(){
     <tr class="total income-total"><td>סה״כ הכנסות</td><td class="num">${money(r.income)}</td></tr>
     <tr><td class="section-label" colspan="2">הוצאות</td></tr>
     <tr class="sub"><td>מדיה (${num(Math.round(r.leadsForMedia))} לידים × ${money(state.pricePerLead)})</td><td class="num">${money(r.media)}</td></tr>
-    <tr class="sub"><td>עמלות קלוזרים (${r.numClosers} קלוזרים)</td><td class="num">${money(r.closerCommission)}</td></tr>
+    <tr class="sub"><td>עמלות אנשי מכירות (${r.numClosers} אנשי מכירות)</td><td class="num">${money(r.closerCommission)}</td></tr>
     <tr class="sub"><td>סליקה (${state.clearingPct}% מהמחזור)</td><td class="num">${money(r.clearFee)}</td></tr>
     <tr class="sub"><td>הוצאות קבועות</td><td class="num">${money(r.fixed||state.fixed)}</td></tr>
     <tr class="total exp-total"><td>סה״כ הוצאות</td><td class="num">${money(r.expenses)}</td></tr>
@@ -455,8 +473,8 @@ function update(){
   // KPIs
   const clientCostAlert = r.clientCostPct > 0.18;
   document.getElementById('kpis').innerHTML = `
-    <div class="kpi"><div class="k-label">מספר קלוזרים נדרש</div><div class="k-val">${r.numClosers}</div>
-      <div class="k-note">${num(Math.round(r.dealsCloser))} עסקאות ÷ ${state.capacity} קיבולת</div></div>
+    <div class="kpi"><div class="k-label">אנשי מכירות (קלוזרים)</div><div class="k-val">${r.numClosers}</div>
+      <div class="k-note">⌈${num(Math.round(r.dealsCloser))} עסקאות ÷ ${state.capacity} קיבולת⌉</div></div>
     <div class="kpi"><div class="k-label">מחזור ממוצע לקלוזר</div><div class="k-val">${money(r.revPerCloser)}</div>
       <div class="k-note">עמלה לקלוזר: ${money(r.commPerCloser)}</div></div>
     <div class="kpi"><div class="k-label">אחוז קלוזר אפקטיבי</div><div class="k-val">${pct(r.effCloserRate)}</div>

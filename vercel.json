@@ -1,0 +1,10 @@
+{
+  "framework": null,
+  "installCommand": "echo 'No dependencies to install'",
+  "buildCommand": "echo 'Static site — no build step required'",
+  "outputDirectory": ".",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/calculator.html" }
+  ]
+}

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>מחשבון כדאיות עסקית — שיווק ומכירות לתיירות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+<style>
+  :root{
+    --bg:#0e1524; --panel:#151f33; --panel-2:#1b2740; --line:rgba(255,255,255,.08);
+    --text:#eef2fb; --dim:#93a1bd; --brand:#3b82f6; --brand-2:#22d3ee;
+    --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
+    --radius:16px; --font:'Heebo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.55;
+    background-image:radial-gradient(900px 500px at 100% -10%,rgba(59,130,246,.15),transparent),
+                     radial-gradient(700px 400px at -10% 10%,rgba(34,211,238,.10),transparent);
+    -webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+  header.top{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+  .logo-mark{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.4rem;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));box-shadow:0 8px 22px rgba(59,130,246,.4)}
+  header.top h1{font-size:clamp(1.4rem,3vw,2rem);font-weight:800;letter-spacing:-.5px}
+  header.top p{color:var(--dim);font-size:.95rem}
+
+  .layout{display:grid;grid-template-columns:minmax(360px,420px) 1fr;gap:22px;margin-top:22px;align-items:start}
+  @media(max-width:980px){.layout{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h2{font-size:1.05rem;font-weight:700;margin-bottom:4px}
+  .card .hint{color:var(--dim);font-size:.85rem;margin-bottom:16px}
+
+  /* Toggle */
+  .toggle{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:4px;margin-bottom:18px}
+  .toggle button{flex:1;border:none;background:transparent;color:var(--dim);font-family:var(--font);font-weight:600;
+    font-size:.9rem;padding:10px;border-radius:999px;cursor:pointer;transition:.2s}
+  .toggle button.active{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.4)}
+
+  /* Controls */
+  .ctrl{margin-bottom:16px}
+  .ctrl.hidden{display:none}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;gap:10px}
+  .ctrl-head label{font-size:.9rem;font-weight:500;color:#d6ddec}
+  .ctrl-val{display:flex;align-items:center;gap:2px}
+  .ctrl-val input[type=number]{width:92px;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    font-family:var(--font);font-weight:700;font-size:.9rem;text-align:center;border-radius:8px;padding:5px 6px;outline:none}
+  .ctrl-val input[type=number]:focus{border-color:var(--brand)}
+  .ctrl-val .unit{color:var(--dim);font-size:.85rem;font-weight:600}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:999px;
+    background:linear-gradient(90deg,var(--brand) var(--pct,50%),var(--panel-2) var(--pct,50%));cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:#fff;border:3px solid var(--brand);box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--brand);cursor:pointer}
+
+  /* Tiers table */
+  .tiers{margin-top:6px}
+  .tier-row{display:grid;grid-template-columns:1fr 90px 34px;gap:8px;align-items:center;margin-bottom:8px}
+  .tier-row .lead{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:.82rem}
+  .tier-row input{background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-family:var(--font);
+    font-weight:600;font-size:.85rem;border-radius:8px;padding:7px 8px;outline:none;width:100%}
+  .tier-row input:focus{border-color:var(--brand)}
+  .tier-row input:disabled{opacity:.55;cursor:not-allowed}
+  .tier-row .del{background:var(--panel-2);border:1px solid var(--line);color:var(--red);border-radius:8px;
+    cursor:pointer;font-size:1rem;height:34px;transition:.15s}
+  .tier-row .del:hover{background:rgba(239,68,68,.15)}
+  .tier-row .del:disabled{opacity:.3;cursor:not-allowed}
+  .btn-add{margin-top:4px;background:var(--panel-2);border:1px dashed var(--line);color:var(--brand-2);
+    font-family:var(--font);font-weight:600;font-size:.85rem;padding:9px;border-radius:8px;cursor:pointer;width:100%;transition:.15s}
+  .btn-add:hover{border-color:var(--brand-2)}
+
+  /* Results */
+  .results{display:flex;flex-direction:column;gap:20px}
+  .profit-card{border-radius:var(--radius);padding:26px;text-align:center;position:relative;overflow:hidden;border:1px solid var(--line)}
+  .profit-card.pos{background:linear-gradient(135deg,rgba(34,197,94,.16),rgba(34,197,94,.04))}
+  .profit-card.neg{background:linear-gradient(135deg,rgba(239,68,68,.16),rgba(239,68,68,.04))}
+  .profit-card .cap{color:var(--dim);font-size:.9rem;font-weight:600;letter-spacing:.5px}
+  .profit-card .amount{font-size:clamp(2.4rem,6vw,3.6rem);font-weight:900;letter-spacing:-1.5px;margin:4px 0;line-height:1}
+  .profit-card.pos .amount{color:var(--green)}
+  .profit-card.neg .amount{color:var(--red)}
+  .profit-card .margin{font-size:.95rem;color:var(--dim)}
+  .profit-card .margin b{color:var(--text)}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+
+  /* P&L */
+  table.pnl{width:100%;border-collapse:collapse;font-size:.92rem}
+  table.pnl td{padding:9px 4px;border-bottom:1px solid var(--line)}
+  table.pnl td.num{text-align:left;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.pnl tr.sub td{color:var(--dim);font-size:.86rem}
+  table.pnl tr.sub td:first-child{padding-inline-start:16px}
+  table.pnl tr.total td{font-weight:800;border-bottom:2px solid var(--line)}
+  table.pnl tr.income-total td{color:var(--brand-2)}
+  table.pnl tr.exp-total td{color:var(--amber)}
+  table.pnl .section-label{color:var(--dim);font-size:.78rem;font-weight:700;letter-spacing:.5px;padding-top:14px}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .kpi{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .k-label{color:var(--dim);font-size:.8rem;margin-bottom:6px}
+  .kpi .k-val{font-size:1.4rem;font-weight:800;font-variant-numeric:tabular-nums}
+  .kpi.alert{border-color:var(--red);background:rgba(239,68,68,.1)}
+  .kpi.alert .k-val{color:var(--red)}
+  .kpi .k-note{font-size:.72rem;color:var(--dim);margin-top:3px}
+  .kpi.alert .k-note{color:var(--red)}
+
+  /* Break-even */
+  .breakeven{background:linear-gradient(135deg,rgba(59,130,246,.12),transparent);border:1px solid var(--line);
+    border-radius:12px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:8px 26px;align-items:center}
+  .breakeven .be-item{display:flex;flex-direction:column}
+  .breakeven .be-item .l{color:var(--dim);font-size:.8rem}
+  .breakeven .be-item .v{font-size:1.25rem;font-weight:800}
+  .breakeven .note{color:var(--brand-2);font-size:.82rem;flex-basis:100%}
+
+  /* Chart */
+  .chart{display:flex;align-items:flex-end;gap:22px;height:220px;padding:14px 6px 0;border-bottom:1px solid var(--line)}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:8px}
+  .bar{width:100%;max-width:88px;border-radius:8px 8px 0 0;min-height:2px;transition:height .4s ease;position:relative}
+  .bar .bv{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:.78rem;font-weight:700;white-space:nowrap}
+  .bar.income{background:linear-gradient(180deg,var(--brand-2),var(--brand))}
+  .bar.expense{background:linear-gradient(180deg,var(--amber),#d97706)}
+  .bar.profit-pos{background:linear-gradient(180deg,var(--green),#16a34a)}
+  .bar.profit-neg{background:linear-gradient(180deg,var(--red),#b91c1c)}
+  .bar-label{color:var(--dim);font-size:.82rem;text-align:center}
+
+  /* Scenarios */
+  .scn-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .btn{font-family:var(--font);font-weight:600;font-size:.88rem;padding:10px 18px;border-radius:10px;border:1px solid var(--line);cursor:pointer;transition:.15s}
+  .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border-color:transparent}
+  .btn-primary:hover{transform:translateY(-1px)}
+  .btn-ghost{background:var(--panel-2);color:var(--text)}
+  .btn-ghost:hover{background:#22304d}
+  .scn-table{width:100%;border-collapse:collapse;font-size:.85rem}
+  .scn-table th,.scn-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .scn-table th{color:var(--dim);font-weight:600;font-size:.8rem}
+  .scn-table td.num{font-variant-numeric:tabular-nums;font-weight:600}
+  .scn-table .rm{color:var(--red);cursor:pointer;background:none;border:none;font-size:1rem}
+  .scn-empty{color:var(--dim);font-size:.88rem;padding:10px 0}
+  .scroll-x{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo-mark">📊</div>
+    <div>
+      <h1>מחשבון כדאיות עסקית</h1>
+      <p>שיווק + מכירות לתיירות — כל הפרמטרים משפיעים בזמן אמת</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- ===== INPUTS ===== -->
+    <aside class="card" style="align-self:start">
+      <h2>פרמטרים</h2>
+      <p class="hint">גררו סליידר או הקלידו ערך — התוצאות מתעדכנות מיידית</p>
+
+      <div class="toggle" id="modeToggle">
+        <button data-mode="A" class="active">נגזר מלידים</button>
+        <button data-mode="B">קלט ידני של עסקאות</button>
+      </div>
+
+      <div id="controls"></div>
+
+      <h2 style="margin-top:22px">מדרגות עמלה לאיש מכירות</h2>
+      <p class="hint">חישוב שולי (כמו מס) — פר קלוזר. השורה האחרונה חלה על כל מה שמעל.</p>
+      <div class="tiers" id="tiers"></div>
+      <button class="btn-add" id="addTier">+ הוסף מדרגה</button>
+    </aside>
+
+    <!-- ===== RESULTS ===== -->
+    <main class="results">
+      <div class="profit-card pos" id="profitCard">
+        <div class="cap">רווח חודשי נקי</div>
+        <div class="amount" id="profitAmount">₪0</div>
+        <div class="margin">שולי רווח: <b id="marginVal">0%</b> מההכנסות</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>דו״ח רווח והפסד (P&L)</h2>
+          <p class="hint">פירוט חודשי מלא</p>
+          <table class="pnl" id="pnl"></table>
+        </div>
+
+        <div class="card">
+          <h2>מדדי ביצוע (KPI)</h2>
+          <p class="hint">האם המודל בריא?</p>
+          <div class="kpis" id="kpis"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>נקודת איזון (Break-even)</h2>
+        <p class="hint">כמה צריך כדי לצאת מאפס בפרמטרים הנוכחיים</p>
+        <div class="breakeven" id="breakeven"></div>
+      </div>
+
+      <div class="card">
+        <h2>הכנסות · הוצאות · רווח</h2>
+        <p class="hint">תמונה חזותית</p>
+        <div class="chart" id="chart"></div>
+      </div>
+
+      <div class="card">
+        <h2>השוואת תרחישים</h2>
+        <p class="hint">שמרו עד 3 תרחישים והשוו זה לצד זה (נשמר בדפדפן)</p>
+        <div class="scn-actions">
+          <button class="btn btn-primary" id="saveScn">💾 שמור תרחיש נוכחי</button>
+          <button class="btn btn-ghost" id="clearScn">נקה הכל</button>
+        </div>
+        <div class="scroll-x"><div id="scnWrap"></div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ===================== State & config ===================== */
+const CONTROLS = [
+  {key:'dealAmount',    label:'סכום עסקה ממוצע',            min:1500, max:8000, step:50,  val:3600,  unit:'₪'},
+  {key:'leads',         label:'כמות לידים בחודש',           min:0,    max:2000, step:1,   val:444,   unit:''},
+  {key:'pricePerLead',  label:'מחיר לליד',                  min:10,   max:60,   step:0.5, val:22.5,  unit:'₪'},
+  {key:'closeRatio',    label:'יחס סגירה',                  min:5,    max:35,   step:0.5, val:16,    unit:'%', onlyA:true},
+  {key:'manualDeals',   label:'כמות עסקאות (ידני)',         min:0,    max:600,  step:1,   val:71,    unit:'',  onlyB:true},
+  {key:'cancelPct',     label:'אחוז ביטולים',               min:0,    max:30,   step:0.5, val:8,     unit:'%'},
+  {key:'marketPct',     label:'% עסקאות במרקט אוטומטי',      min:0,    max:100,  step:1,   val:0,     unit:'%'},
+  {key:'myComm',        label:'העמלה שלי מהמחזור',          min:8,    max:20,   step:0.5, val:12,    unit:'%'},
+  {key:'capacity',      label:'מקס מכירות לאיש מכירות',      min:10,   max:200,  step:1,   val:70,    unit:''},
+  {key:'numClients',    label:'מספר לקוחות (ריטיינר)',       min:1,    max:10,   step:1,   val:1,     unit:''},
+  {key:'retainer',      label:'ריטיינר חודשי ללקוח',        min:0,    max:30000,step:500, val:10000, unit:'₪'},
+  {key:'fixed',         label:'הוצאות קבועות חודשיות',       min:0,    max:20000,step:100, val:2000,  unit:'₪'},
+  {key:'clearingPct',   label:'עמלת סליקה',                 min:0,    max:5,    step:0.1, val:1,     unit:'%'},
+];
+const PCT_KEYS = new Set(['closeRatio','cancelPct','marketPct','myComm','clearingPct']);
+
+const state = {mode:'A'};
+CONTROLS.forEach(c=> state[c.key]=c.val);
+let tiers = [ {upTo:150000, rate:4}, {upTo:300000, rate:4.5}, {upTo:Infinity, rate:5} ];
+
+/* ===================== Formatting ===================== */
+const nfILS = new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',maximumFractionDigits:0});
+const nfNum = new Intl.NumberFormat('he-IL',{maximumFractionDigits:0});
+const money = v => nfILS.format(Math.round(v||0));
+const num   = v => nfNum.format(v||0);
+const pct   = v => (v*100).toFixed(1).replace(/\.0$/,'')+'%';
+
+/* ===================== Core computation ===================== */
+function marginalCommission(revenue, tierList){
+  // tierList: sorted ascending by upTo, last upTo = Infinity. rate in % (e.g. 4).
+  const sorted = [...tierList].sort((a,b)=> a.upTo - b.upTo);
+  let comm=0, lower=0;
+  for(const t of sorted){
+    const cap = isFinite(t.upTo) ? t.upTo : Infinity;
+    if(revenue > lower){
+      const portion = Math.min(revenue, cap) - lower;
+      comm += portion * (t.rate/100);
+    }
+    lower = cap;
+    if(revenue <= cap) break;
+  }
+  return comm;
+}
+
+function compute(s, tierList){
+  const dealAmount = s.dealAmount;
+  const leads      = s.leads;
+  const closeRatio = s.closeRatio/100;
+  const cancel     = s.cancelPct/100;
+  const market     = s.marketPct/100;
+  const myComm     = s.myComm/100;
+  const clearing   = s.clearingPct/100;
+
+  const dealsGross = s.mode==='A' ? leads*closeRatio : s.manualDeals;
+  const dealsEff   = dealsGross * (1-cancel);
+  const dealsCloser= dealsEff * (1-market);      // עסקאות דרך קלוזר
+  const dealsMarket= dealsEff * market;
+
+  const revenue      = dealsEff   * dealAmount;   // מחזור ברוטו (אפקטיבי)
+  const revenueCloser= dealsCloser* dealAmount;
+
+  const numClosers = dealsCloser>0 ? Math.ceil(dealsCloser/s.capacity) : 0;
+  const revPerCloser = numClosers>0 ? revenueCloser/numClosers : 0;
+  const commPerCloser= marginalCommission(revPerCloser, tierList);
+  const closerCommission = commPerCloser * numClosers;
+
+  const media    = leads * s.pricePerLead;
+  const clearFee = revenue * clearing;
+  const commIncome = revenue * myComm;
+  const retIncome  = s.retainer * s.numClients;
+  const income   = commIncome + retIncome;
+  const expenses = media + closerCommission + clearFee + s.fixed;
+  const profit   = income - expenses;
+  const margin   = income>0 ? profit/income : 0;
+
+  return {dealsGross,dealsEff,dealsCloser,dealsMarket,revenue,revenueCloser,numClosers,
+    revPerCloser,commPerCloser,closerCommission,media,clearFee,commIncome,retIncome,
+    income,expenses,profit,margin,
+    effCloserRate: revenueCloser>0 ? closerCommission/revenueCloser : 0,
+    marketingPctOfRev: revenue>0 ? media/revenue : 0,
+    clientCostPct: revenue>0 ? income/revenue : 0};
+}
+
+/* Break-even: solve for gross deals where profit crosses 0 */
+function breakEven(s, tierList){
+  const profitFor = (dGross)=>{
+    const s2 = {...s};
+    if(s.mode==='A'){ s2.leads = s.closeRatio>0 ? dGross/(s.closeRatio/100) : 0; }
+    else { s2.manualDeals = dGross; }
+    return compute(s2, tierList).profit;
+  };
+  if(profitFor(0) >= 0){
+    return {already:true, dealsEff:0, leads: s.mode==='A'?0:s.leads};
+  }
+  let lo=0, hi=1;
+  while(profitFor(hi) < 0 && hi < 5e6) hi*=2;
+  if(profitFor(hi) < 0) return {unreachable:true};
+  for(let i=0;i<80;i++){ const mid=(lo+hi)/2; if(profitFor(mid)>=0) hi=mid; else lo=mid; }
+  const dGross = hi;
+  const cancel = s.cancelPct/100;
+  const dealsEff = dGross*(1-cancel);
+  const leads = s.mode==='A' ? (s.closeRatio>0 ? dGross/(s.closeRatio/100) : 0) : s.leads;
+  return {dealsEff, leads, dealsGross:dGross};
+}
+
+/* ===================== Rendering ===================== */
+function renderControls(){
+  const host = document.getElementById('controls');
+  host.innerHTML='';
+  CONTROLS.forEach(c=>{
+    if(c.onlyA && state.mode!=='A') return;
+    if(c.onlyB && state.mode!=='B') return;
+    const wrap = document.createElement('div');
+    wrap.className='ctrl';
+    wrap.innerHTML = `
+      <div class="ctrl-head">
+        <label for="r-${c.key}">${c.label}</label>
+        <div class="ctrl-val">
+          <input type="number" id="n-${c.key}" min="${c.min}" max="${c.max}" step="${c.step}" value="${state[c.key]}">
+          <span class="unit">${c.unit||''}</span>
+        </div>
+      </div>
+      <input type="range" id="r-${c.key}" min="${c.min}" max="${c.max}" step="${c.step}" value="${state[c.key]}">`;
+    host.appendChild(wrap);
+    const range = wrap.querySelector('input[type=range]');
+    const numI  = wrap.querySelector('input[type=number]');
+    const setPct = ()=>{ const p=((state[c.key]-c.min)/(c.max-c.min))*100; range.style.setProperty('--pct',p+'%'); };
+    setPct();
+    range.addEventListener('input',()=>{ state[c.key]=+range.value; numI.value=range.value; setPct(); update(); });
+    numI.addEventListener('input',()=>{
+      let v=parseFloat(numI.value); if(isNaN(v)) return;
+      state[c.key]=v; range.value=v; setPct(); update();
+    });
+  });
+}
+
+function renderTiers(){
+  const host = document.getElementById('tiers');
+  host.innerHTML='';
+  tiers.forEach((t,i)=>{
+    const isLast = i===tiers.length-1;
+    const row = document.createElement('div');
+    row.className='tier-row';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="lead">${isLast?'מעל':'עד'}</span>
+        <input type="number" class="t-upto" ${isLast?'disabled value="∞"':`value="${t.upTo}"`} min="0" step="1000" style="flex:1">
+        <span class="lead">₪</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" class="t-rate" value="${t.rate}" min="0" max="100" step="0.1">
+        <span class="lead">%</span>
+      </div>
+      <button class="del" ${tiers.length<=1?'disabled':''} title="מחק">✕</button>`;
+    host.appendChild(row);
+    const upto = row.querySelector('.t-upto');
+    const rate = row.querySelector('.t-rate');
+    if(!isLast) upto.addEventListener('input',()=>{ const v=parseFloat(upto.value); if(!isNaN(v)){ t.upTo=v; update(); } });
+    rate.addEventListener('input',()=>{ const v=parseFloat(rate.value); if(!isNaN(v)){ t.rate=v; update(); } });
+    row.querySelector('.del').addEventListener('click',()=>{
+      if(tiers.length<=1) return;
+      tiers.splice(i,1);
+      tiers[tiers.length-1].upTo = Infinity; // ensure last is open-ended
+      renderTiers(); update();
+    });
+  });
+}
+
+document.getElementById('addTier').addEventListener('click',()=>{
+  // insert a new tier before the last (infinite) one
+  const last = tiers[tiers.length-1];
+  const prev = tiers.length>=2 ? tiers[tiers.length-2].upTo : 0;
+  const newUpTo = isFinite(prev) ? prev*2 : 150000;
+  tiers.splice(tiers.length-1, 0, {upTo:newUpTo, rate:last.rate});
+  renderTiers(); update();
+});
+
+/* Mode toggle */
+document.getElementById('modeToggle').addEventListener('click',(e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  state.mode = btn.dataset.mode;
+  [...e.currentTarget.children].forEach(b=>b.classList.toggle('active', b===btn));
+  renderControls(); update();
+});
+
+/* ===================== Update (live) ===================== */
+function update(){
+  const r = compute(state, tiers);
+
+  // Profit card
+  const card = document.getElementById('profitCard');
+  card.className = 'profit-card ' + (r.profit>=0?'pos':'neg');
+  document.getElementById('profitAmount').textContent = money(r.profit);
+  document.getElementById('marginVal').textContent = pct(r.margin);
+
+  // P&L
+  document.getElementById('pnl').innerHTML = `
+    <tr><td class="section-label" colspan="2">הכנסות</td></tr>
+    <tr class="sub"><td>עמלה מהמחזור (${state.myComm}%)</td><td class="num">${money(r.commIncome)}</td></tr>
+    <tr class="sub"><td>ריטיינרים (${state.numClients} × ${money(state.retainer)})</td><td class="num">${money(r.retIncome)}</td></tr>
+    <tr class="total income-total"><td>סה״כ הכנסות</td><td class="num">${money(r.income)}</td></tr>
+    <tr><td class="section-label" colspan="2">הוצאות</td></tr>
+    <tr class="sub"><td>מדיה (${num(state.leads)} לידים × ${money(state.pricePerLead)})</td><td class="num">${money(r.media)}</td></tr>
+    <tr class="sub"><td>עמלות קלוזרים (${r.numClosers} קלוזרים)</td><td class="num">${money(r.closerCommission)}</td></tr>
+    <tr class="sub"><td>סליקה (${state.clearingPct}% מהמחזור)</td><td class="num">${money(r.clearFee)}</td></tr>
+    <tr class="sub"><td>הוצאות קבועות</td><td class="num">${money(r.fixed||state.fixed)}</td></tr>
+    <tr class="total exp-total"><td>סה״כ הוצאות</td><td class="num">${money(r.expenses)}</td></tr>
+    <tr class="total"><td>מחזור ברוטו (${num(Math.round(r.dealsEff))} עסקאות אפקטיביות)</td><td class="num">${money(r.revenue)}</td></tr>`;
+
+  // KPIs
+  const clientCostAlert = r.clientCostPct > 0.18;
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="k-label">מספר קלוזרים נדרש</div><div class="k-val">${r.numClosers}</div>
+      <div class="k-note">${num(Math.round(r.dealsCloser))} עסקאות ÷ ${state.capacity} קיבולת</div></div>
+    <div class="kpi"><div class="k-label">מחזור ממוצע לקלוזר</div><div class="k-val">${money(r.revPerCloser)}</div>
+      <div class="k-note">עמלה לקלוזר: ${money(r.commPerCloser)}</div></div>
+    <div class="kpi"><div class="k-label">אחוז קלוזר אפקטיבי</div><div class="k-val">${pct(r.effCloserRate)}</div>
+      <div class="k-note">מעלות הקלוזרים על מחזורם</div></div>
+    <div class="kpi"><div class="k-label">עלות שיווק מהמחזור</div><div class="k-val">${pct(r.marketingPctOfRev)}</div>
+      <div class="k-note">מדיה ÷ מחזור</div></div>
+    <div class="kpi ${clientCostAlert?'alert':''}" style="grid-column:1/-1">
+      <div class="k-label">עלות כוללת ללקוח (מהמחזור שלו)</div>
+      <div class="k-val">${pct(r.clientCostPct)}</div>
+      <div class="k-note">${clientCostAlert?'⚠️ יקר מ-Booking (מעל 18%)':'עמלה שלי + ריטיינר יחסי · מתחת ל-18% ✓'}</div>
+    </div>`;
+
+  // Break-even
+  const be = breakEven(state, tiers);
+  const beHost = document.getElementById('breakeven');
+  if(be.already){
+    beHost.innerHTML = `
+      <div class="be-item"><span class="l">עסקאות לאיזון</span><span class="v">0</span></div>
+      <div class="note">✅ כבר רווחי — הריטיינרים (${money(r.retIncome)}) מכסים את ההוצאות הקבועות עוד לפני עסקאות.</div>`;
+  } else if(be.unreachable){
+    beHost.innerHTML = `<div class="note">⚠️ לא ניתן להגיע לאיזון בפרמטרים הנוכחיים — כל עסקה נוספת מגדילה את ההפסד.</div>`;
+  } else {
+    beHost.innerHTML = `
+      <div class="be-item"><span class="l">עסקאות אפקטיביות לאיזון</span><span class="v">${num(Math.ceil(be.dealsEff))}</span></div>
+      <div class="be-item"><span class="l">${state.mode==='A'?'לידים נדרשים':'לידים (קבוע)'}</span><span class="v">${num(Math.ceil(be.leads))}</span></div>
+      <div class="be-item"><span class="l">מצב נוכחי</span><span class="v" style="color:${r.profit>=0?'var(--green)':'var(--red)'}">${r.profit>=0?'מעל האיזון':'מתחת לאיזון'}</span></div>`;
+  }
+
+  // Chart
+  const maxV = Math.max(r.income, r.expenses, Math.abs(r.profit), 1);
+  const H = 180;
+  const bar = (cls,val,label)=>{
+    const h = Math.max((Math.abs(val)/maxV)*H, 2);
+    return `<div class="bar-col"><div class="bar ${cls}" style="height:${h}px"><span class="bv">${money(val)}</span></div><div class="bar-label">${label}</div></div>`;
+  };
+  document.getElementById('chart').innerHTML =
+    bar('income', r.income, 'הכנסות') +
+    bar('expense', r.expenses, 'הוצאות') +
+    bar(r.profit>=0?'profit-pos':'profit-neg', r.profit, 'רווח');
+
+  renderScenarios();
+}
+
+/* ===================== Scenarios (localStorage) ===================== */
+const LS_KEY = 'biz-calc-scenarios';
+function loadScn(){ try{ return JSON.parse(localStorage.getItem(LS_KEY))||[]; }catch(e){ return []; } }
+function saveScn(list){ localStorage.setItem(LS_KEY, JSON.stringify(list)); }
+
+document.getElementById('saveScn').addEventListener('click',()=>{
+  const list = loadScn();
+  if(list.length>=3){ alert('אפשר לשמור עד 3 תרחישים. מחקו אחד קודם.'); return; }
+  const r = compute(state, tiers);
+  const name = prompt('שם לתרחיש:', 'תרחיש '+(list.length+1));
+  if(name===null) return;
+  list.push({name: name||('תרחיש '+(list.length+1)),
+    state: JSON.parse(JSON.stringify(state)),
+    tiers: JSON.parse(JSON.stringify(tiers.map(t=>({upTo:isFinite(t.upTo)?t.upTo:'INF',rate:t.rate})))),
+    r:{income:r.income,expenses:r.expenses,profit:r.profit,margin:r.margin,revenue:r.revenue,numClosers:r.numClosers}});
+  saveScn(list); renderScenarios();
+});
+document.getElementById('clearScn').addEventListener('click',()=>{
+  if(confirm('למחוק את כל התרחישים השמורים?')){ saveScn([]); renderScenarios(); }
+});
+
+function renderScenarios(){
+  const list = loadScn();
+  const host = document.getElementById('scnWrap');
+  if(list.length===0){ host.innerHTML='<div class="scn-empty">אין תרחישים שמורים עדיין. שנו פרמטרים ולחצו "שמור תרחיש".</div>'; return; }
+  const rows = [
+    ['רווח נקי', s=>money(s.r.profit), s=>s.r.profit>=0?'var(--green)':'var(--red)'],
+    ['שולי רווח', s=>pct(s.r.margin)],
+    ['מחזור', s=>money(s.r.revenue)],
+    ['הכנסות', s=>money(s.r.income)],
+    ['הוצאות', s=>money(s.r.expenses)],
+    ['קלוזרים', s=>s.r.numClosers],
+    ['סכום עסקה', s=>money(s.state.dealAmount)],
+    ['לידים', s=>num(s.state.leads)],
+    ['מחיר לליד', s=>money(s.state.pricePerLead)],
+    ['עמלה שלי', s=>s.state.myComm+'%'],
+    ['ריטיינר', s=>money(s.state.retainer*s.state.numClients)],
+  ];
+  let html = '<table class="scn-table"><thead><tr><th>מדד</th>';
+  list.forEach((s,i)=> html += `<th>${s.name} <button class="rm" data-i="${i}" title="מחק">✕</button></th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(([label,fn,color])=>{
+    html += `<tr><td style="color:var(--dim)">${label}</td>`;
+    list.forEach(s=>{ const c = color?color(s):''; html += `<td class="num" ${c?`style="color:${c}"`:''}>${fn(s)}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  host.innerHTML = html;
+  host.querySelectorAll('.rm').forEach(b=> b.addEventListener('click',()=>{
+    const l = loadScn(); l.splice(+b.dataset.i,1); saveScn(l); renderScenarios();
+  }));
+}
+
+/* ===================== Init ===================== */
+renderControls();
+renderTiers();
+update();
+</script>
+</body>
+</html>

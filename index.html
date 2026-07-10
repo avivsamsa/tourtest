@@ -223,10 +223,11 @@
 /* ===================== State & config ===================== */
 const CONTROLS = [
   {key:'dealAmount',    label:'סכום עסקה ממוצע',            min:1500, max:8000, step:50,  val:3600,  unit:'₪'},
-  {key:'leads',         label:'כמות לידים בחודש',           min:0,    max:2000, step:1,   val:444,   unit:''},
+  {key:'leads',         label:'כמות לידים בחודש',           min:0,    max:2000, step:1,   val:444,   unit:'',  onlyA:true},
   {key:'pricePerLead',  label:'מחיר לליד',                  min:10,   max:60,   step:0.5, val:22.5,  unit:'₪'},
   {key:'closeRatio',    label:'יחס סגירה',                  min:5,    max:35,   step:0.5, val:16,    unit:'%', onlyA:true},
   {key:'manualDeals',   label:'כמות עסקאות (ידני)',         min:0,    max:600,  step:1,   val:71,    unit:'',  onlyB:true},
+  {key:'convTarget',    label:'יעד המרה (ליד → עסקה)',       min:1,    max:100,  step:0.5, val:16,    unit:'%', onlyB:true},
   {key:'cancelPct',     label:'אחוז ביטולים',               min:0,    max:30,   step:0.5, val:8,     unit:'%'},
   {key:'marketPct',     label:'% עסקאות במרקט אוטומטי',      min:0,    max:100,  step:1,   val:0,     unit:'%'},
   {key:'myComm',        label:'העמלה שלי מהמחזור',          min:8,    max:20,   step:0.5, val:12,    unit:'%'},
@@ -274,8 +275,11 @@ function compute(s, tierList){
   const market     = s.marketPct/100;
   const myComm     = s.myComm/100;
   const clearing   = s.clearingPct/100;
+  const convTarget = s.convTarget/100;
 
   const dealsGross = s.mode==='A' ? leads*closeRatio : s.manualDeals;
+  // מצב ידני: הלידים נגזרים מכמות העסקאות ומיעד ההמרה (לידים = עסקאות ÷ יעד המרה)
+  const leadsForMedia = s.mode==='A' ? leads : (convTarget>0 ? s.manualDeals/convTarget : 0);
   const dealsEff   = dealsGross * (1-cancel);
   const dealsCloser= dealsEff * (1-market);      // עסקאות דרך קלוזר
   const dealsMarket= dealsEff * market;
@@ -288,7 +292,7 @@ function compute(s, tierList){
   const commPerCloser= marginalCommission(revPerCloser, tierList);
   const closerCommission = commPerCloser * numClosers;
 
-  const media    = leads * s.pricePerLead;
+  const media    = leadsForMedia * s.pricePerLead;
   const clearFee = revenue * clearing;
   const commIncome = revenue * myComm;
   const retIncome  = s.retainer * s.numClients;
@@ -299,6 +303,7 @@ function compute(s, tierList){
 
   return {dealsGross,dealsEff,dealsCloser,dealsMarket,revenue,revenueCloser,numClosers,
     revPerCloser,commPerCloser,closerCommission,media,clearFee,commIncome,retIncome,
+    leadsForMedia,
     income,expenses,profit,margin,
     effCloserRate: revenueCloser>0 ? closerCommission/revenueCloser : 0,
     marketingPctOfRev: revenue>0 ? media/revenue : 0,
@@ -314,7 +319,7 @@ function breakEven(s, tierList){
     return compute(s2, tierList).profit;
   };
   if(profitFor(0) >= 0){
-    return {already:true, dealsEff:0, leads: s.mode==='A'?0:s.leads};
+    return {already:true, dealsEff:0, leads:0};
   }
   let lo=0, hi=1;
   while(profitFor(hi) < 0 && hi < 5e6) hi*=2;
@@ -323,7 +328,9 @@ function breakEven(s, tierList){
   const dGross = hi;
   const cancel = s.cancelPct/100;
   const dealsEff = dGross*(1-cancel);
-  const leads = s.mode==='A' ? (s.closeRatio>0 ? dGross/(s.closeRatio/100) : 0) : s.leads;
+  const leads = s.mode==='A'
+    ? (s.closeRatio>0 ? dGross/(s.closeRatio/100) : 0)
+    : (s.convTarget>0 ? dGross/(s.convTarget/100) : 0);
   return {dealsEff, leads, dealsGross:dGross};
 }
 
@@ -356,6 +363,16 @@ function renderControls(){
       state[c.key]=v; range.value=v; setPct(); update();
     });
   });
+
+  // מצב ידני: תצוגת לידים נגזרים (לקריאה בלבד)
+  if(state.mode==='B'){
+    const info = document.createElement('div');
+    info.className='ctrl';
+    info.innerHTML = `<div style="background:linear-gradient(135deg,rgba(59,130,246,.14),transparent);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:var(--dim);font-size:.85rem">לידים נגזרים (עסקאות ÷ יעד המרה)</span>
+      <span style="font-weight:800;font-size:1.15rem" id="derivedLeads">—</span></div>`;
+    host.appendChild(info);
+  }
 }
 
 function renderTiers(){
@@ -417,6 +434,10 @@ function update(){
   document.getElementById('profitAmount').textContent = money(r.profit);
   document.getElementById('marginVal').textContent = pct(r.margin);
 
+  // עדכון לידים נגזרים (מצב ידני)
+  const dl = document.getElementById('derivedLeads');
+  if(dl) dl.textContent = num(Math.round(r.leadsForMedia)) + ' לידים';
+
   // P&L
   document.getElementById('pnl').innerHTML = `
     <tr><td class="section-label" colspan="2">הכנסות</td></tr>
@@ -424,7 +445,7 @@ function update(){
     <tr class="sub"><td>ריטיינרים (${state.numClients} × ${money(state.retainer)})</td><td class="num">${money(r.retIncome)}</td></tr>
     <tr class="total income-total"><td>סה״כ הכנסות</td><td class="num">${money(r.income)}</td></tr>
     <tr><td class="section-label" colspan="2">הוצאות</td></tr>
-    <tr class="sub"><td>מדיה (${num(state.leads)} לידים × ${money(state.pricePerLead)})</td><td class="num">${money(r.media)}</td></tr>
+    <tr class="sub"><td>מדיה (${num(Math.round(r.leadsForMedia))} לידים × ${money(state.pricePerLead)})</td><td class="num">${money(r.media)}</td></tr>
     <tr class="sub"><td>עמלות קלוזרים (${r.numClosers} קלוזרים)</td><td class="num">${money(r.closerCommission)}</td></tr>
     <tr class="sub"><td>סליקה (${state.clearingPct}% מהמחזור)</td><td class="num">${money(r.clearFee)}</td></tr>
     <tr class="sub"><td>הוצאות קבועות</td><td class="num">${money(r.fixed||state.fixed)}</td></tr>
@@ -460,7 +481,7 @@ function update(){
   } else {
     beHost.innerHTML = `
       <div class="be-item"><span class="l">עסקאות אפקטיביות לאיזון</span><span class="v">${num(Math.ceil(be.dealsEff))}</span></div>
-      <div class="be-item"><span class="l">${state.mode==='A'?'לידים נדרשים':'לידים (קבוע)'}</span><span class="v">${num(Math.ceil(be.leads))}</span></div>
+      <div class="be-item"><span class="l">לידים נדרשים</span><span class="v">${num(Math.ceil(be.leads))}</span></div>
       <div class="be-item"><span class="l">מצב נוכחי</span><span class="v" style="color:${r.profit>=0?'var(--green)':'var(--red)'}">${r.profit>=0?'מעל האיזון':'מתחת לאיזון'}</span></div>`;
   }
 
@@ -493,7 +514,7 @@ document.getElementById('saveScn').addEventListener('click',()=>{
   list.push({name: name||('תרחיש '+(list.length+1)),
     state: JSON.parse(JSON.stringify(state)),
     tiers: JSON.parse(JSON.stringify(tiers.map(t=>({upTo:isFinite(t.upTo)?t.upTo:'INF',rate:t.rate})))),
-    r:{income:r.income,expenses:r.expenses,profit:r.profit,margin:r.margin,revenue:r.revenue,numClosers:r.numClosers}});
+    r:{income:r.income,expenses:r.expenses,profit:r.profit,margin:r.margin,revenue:r.revenue,numClosers:r.numClosers,leads:r.leadsForMedia}});
   saveScn(list); renderScenarios();
 });
 document.getElementById('clearScn').addEventListener('click',()=>{
@@ -512,7 +533,7 @@ function renderScenarios(){
     ['הוצאות', s=>money(s.r.expenses)],
     ['קלוזרים', s=>s.r.numClosers],
     ['סכום עסקה', s=>money(s.state.dealAmount)],
-    ['לידים', s=>num(s.state.leads)],
+    ['לידים', s=>num(Math.round(s.r.leads!=null?s.r.leads:s.state.leads))],
     ['מחיר לליד', s=>money(s.state.pricePerLead)],
     ['עמלה שלי', s=>s.state.myComm+'%'],
     ['ריטיינר', s=>money(s.state.retainer*s.state.numClients)],

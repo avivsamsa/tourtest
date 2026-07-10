@@ -105,6 +105,8 @@
   .sales-stat .l{font-size:.9rem;font-weight:600}
   .sales-stat .sub{color:var(--dim);font-size:.75rem;margin-top:2px}
   .sales-stat .v{font-size:1.9rem;font-weight:900;line-height:1;color:var(--brand-2)}
+  .sales-stat.gross{background:linear-gradient(135deg,rgba(59,130,246,.18),transparent)}
+  .sales-stat.gross .v{color:var(--brand);font-size:1.7rem;white-space:nowrap}
 
   /* KPI */
   .kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -192,6 +194,7 @@
         <div class="card">
           <h2>דו״ח רווח והפסד (P&L)</h2>
           <p class="hint">פירוט חודשי מלא</p>
+          <div class="sales-stat gross" id="grossStat"></div>
           <div class="sales-stat" id="salesStat"></div>
           <table class="pnl" id="pnl"></table>
         </div>
@@ -446,6 +449,14 @@ function update(){
   // עדכון לידים נגזרים (מצב ידני)
   const dl = document.getElementById('derivedLeads');
   if(dl) dl.textContent = num(Math.round(r.leadsForMedia)) + ' לידים';
+
+  // נתון בולט: סך הכנסות ברוטו (מחזור)
+  document.getElementById('grossStat').innerHTML = `
+    <div>
+      <div class="l">💰 סך הכנסות ברוטו (מחזור)</div>
+      <div class="sub">${num(Math.round(r.dealsEff))} עסקאות אפקטיביות × ${money(state.dealAmount)}</div>
+    </div>
+    <div class="v">${money(r.revenue)}</div>`;
 
   // נתון בולט: מספר אנשי המכירות
   const overCapacity = r.numClosers > 1;
